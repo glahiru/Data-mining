@@ -82,10 +82,11 @@ public class DataSet {
         this.featureList = featureList;
     }
 
+
     public boolean allInOneClass() {
-        String firstClassValue = dataPoint.get(0).values.get(classIndex);
+        String firstClassValue = dataPoint.get(0).getValues().get(classIndex);
         for (int i = 0; i < dataPoint.size(); i++) {
-            if(!dataPoint.get(i).values.get(classIndex).equals(firstClassValue)){
+            if(!dataPoint.get(i).getValues().get(classIndex).equals(firstClassValue)){
                 return false;
             }
         }
@@ -120,12 +121,44 @@ public class DataSet {
     }
 
     List<DataSet> splitByAttribute(DataSet dataSet,Attribute attribute) {
+        int attributeIndex = dataSet.getDefinition().getIndex(attribute.getName());
         ArrayList<DataSet> dataSets = new ArrayList<DataSet>();
         for (int i = 0; i < attribute.getValues().size(); i++) {
             DataSet dataSet1 = new DataSet(dataSet.getDefinition(), null);
             dataSet1.setFeatureList(dataSet.removeFeature(attribute.getName())); // we remove the selected attribute from feature list
-            dataSets.add(new DataSet(dataSet.getDefinition(),null));
+            dataSets.add(new DataSet(dataSet.getDefinition(), null));
         }
+        for (int i = 0; i < dataSet.getDataPoint().size(); i++) {
+            TupleInstance tupleInstance = dataSet.getDataPoint().get(i);
+            String s = tupleInstance.getValues().get(attributeIndex);
+            Attribute attributeByName = dataSet.getDefinition().getAttributeByName(s);
+            if(attributeByName==null){
+                logger.error("Wrong input is given in training dataset");
+                // in this case we drop this tuple because the value in this feature cannot be used
+            }else {
+                int i1 = dataSet.getDefinition().getAttributes().indexOf(attributeByName);
+                dataSets.get(i1).addDataPoint(tupleInstance);
+            }
+
+        }
+        return dataSets;
+    }
+
+    public void calculateEntropies() {
+        for (int i = 0; i < featureList.size(); i++) {
+            getFeatureList().get(i).calculateEntrypy();
+        }
+    }
+
+    public Attribute getMinEntropyAttribute() {
+        Attribute minEntropyAttr = getFeatureList().get(0);
+        for (int i = 0; i < featureList.size(); i++) {
+            Attribute attribute = getFeatureList().get(i);
+            if(minEntropyAttr.getEntrypy()>attribute.getEntrypy()){
+                minEntropyAttr = attribute;
+            }
+        }
+        return minEntropyAttr;
     }
 }
 

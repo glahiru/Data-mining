@@ -28,9 +28,17 @@ import java.util.List;
 public class TupleInstance {
     private final static Logger logger = LoggerFactory.getLogger(TupleInstance.class);
 
-    List<String> values;
+    private List<String> values;
 
     public TupleInstance(List<String> values) {
+        this.values = values;
+    }
+
+    public List<String> getValues() {
+        return values;
+    }
+
+    public void setValues(List<String> values) {
         this.values = values;
     }
 }

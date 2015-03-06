@@ -23,12 +23,11 @@ package com.datamining;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
     private final static Logger logger = LoggerFactory.getLogger(Node.class);
-
-    private boolean leafNode = false;
 
     private Attribute attribute;
 
@@ -36,7 +35,13 @@ public class Node {
 
     private String finalClassName;
 
+    public Node() {
+    }
 
+    public Node(Attribute attribute) {
+        this.attribute = attribute;
+        this.children = new ArrayList<Node>(); // empty children
+    }
 
     public Node(Attribute attribute, List<Node> children) {
         this.attribute = attribute;
@@ -44,11 +49,10 @@ public class Node {
     }
 
     public boolean isLeafNode() {
-        return leafNode;
-    }
-
-    public void setLeafNode(boolean leafNode) {
-        this.leafNode = leafNode;
+        if(children.size()==0){
+            return true;
+        }
+        return false;
     }
 
     public Attribute getAttribute() {
@@ -65,5 +69,9 @@ public class Node {
 
     public void setChildren(List<Node> children) {
         this.children = children;
+    }
+
+    public void addChild(Node node) {
+        children.add(node);
     }
 }

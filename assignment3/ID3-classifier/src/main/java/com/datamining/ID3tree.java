@@ -151,9 +151,17 @@ public class ID3tree {
         if(node.isLeafNode()){
             return;
         }
-        while(!(dataSet.isEmpty() || dataSet.allInOneClass() || dataSet.isFeaturesEmpty())){ // we check thred conditions
+        while(!(dataSet.isEmpty() || dataSet.allInOneClass() || dataSet.isFeaturesEmpty())) { // we check three conditions
+            dataSet.calculateEntropies();
+            Attribute minEntropyAttribute = dataSet.getMinEntropyAttribute();
+            node.setAttribute(minEntropyAttribute);
 
-
+            List<DataSet> dataSets = dataSet.splitByAttribute(dataSet, minEntropyAttribute);
+            for (int i = 0; i < dataSets.size(); i++) {
+                Node node1 = new Node();
+                node.addChild(node1);
+                buildClassifier(dataSets.get(i), node1);
+            }
         }
     }
 
@@ -179,8 +187,8 @@ public class ID3tree {
 
         for (int i = 0; i < tupleInstances.size(); i++) {
             stringBuffer.append("{");
-            for (int j = 0; j < tupleInstances.get(i).values.size(); j++) {
-                stringBuffer.append(tupleInstances.get(i).values.get(j));
+            for (int j = 0; j < tupleInstances.get(i).getValues().size(); j++) {
+                stringBuffer.append(tupleInstances.get(i).getValues().get(j));
                 stringBuffer.append("   ");
             }
             stringBuffer.append("}");

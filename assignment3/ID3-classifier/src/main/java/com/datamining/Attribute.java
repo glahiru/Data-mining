@@ -100,6 +100,15 @@ public class Attribute {
             double p = values.get(i).frequency / total;
             entrypy = entrypy - p * (Math.log(p)/Math.log(2));
         }
+        logger.info("Entropy calculated: " + name + ": "+entrypy);
 
+    }
+
+    public double getEntrypy() {
+        return entrypy;
+    }
+
+    public void setEntrypy(double entrypy) {
+        this.entrypy = entrypy;
     }
 }
