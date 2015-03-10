@@ -41,5 +41,8 @@ public class ID3treeTest {
         ID3tree id3tree = new ID3tree();
         id3tree.loadData(args);
         id3tree.printDataSet();
+        id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
+        id3tree.printID3Tree();
+
     }
 }

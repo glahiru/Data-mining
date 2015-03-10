@@ -26,11 +26,11 @@ import org.slf4j.LoggerFactory;
 public class AttributeValue {
     private final static Logger logger = LoggerFactory.getLogger(AttributeValue.class);
 
-    String value;
+    private String value;
 
-    int frequency;
+    private int frequency;
 
-    double probabilities;               // this is useful when this is used in LeafNodes to hold probability of each attribute value
+    private double probabilities;               // this is useful when this is used in LeafNodes to hold probability of each attribute value
 
     public AttributeValue(String value) {
         this.value = value;
@@ -70,4 +70,6 @@ public class AttributeValue {
     public void setProbabilities(double probabilities) {
         this.probabilities = probabilities;
     }
+
+
 }

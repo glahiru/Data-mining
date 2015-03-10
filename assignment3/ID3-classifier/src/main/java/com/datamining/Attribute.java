@@ -23,21 +23,20 @@ package com.datamining;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Attribute {
     private final static Logger logger = LoggerFactory.getLogger(Attribute.class);
 
     private String name;
 
-    private List<AttributeValue> values;
+    private Map<String,AttributeValue> values;
 
     private int tupleIndex;
 
     private double entrypy;
 
-    public Attribute(String name, List<AttributeValue> values, int tupleIndex) {
+    public Attribute(String name, Map<String,AttributeValue> values, int tupleIndex) {
         this.name = name;
         this.values = values;
         this.tupleIndex = tupleIndex;
@@ -45,12 +44,8 @@ public class Attribute {
 
     public Attribute(String name, int tupleIndex) {
         this.name = name;
-        this.values = new ArrayList<AttributeValue>();
+        this.values = new HashMap<String, AttributeValue>();
         this.tupleIndex = tupleIndex;
-    }
-
-    public int getIndex(String value) {
-        return values.indexOf(value);
     }
 
     public int getSize() {
@@ -58,12 +53,7 @@ public class Attribute {
     }
 
     public void addValue(String value) {
-        for (int i = 0; i < values.size(); i++) {
-            if (values.get(i).getValue().equals(value)) {
-                return;
-            }
-        }
-        values.add(new AttributeValue(value));
+        values.put(value, new AttributeValue(value));
     }
 
     public String getName() {
@@ -74,11 +64,11 @@ public class Attribute {
         this.name = name;
     }
 
-    public List<AttributeValue> getValues() {
+    public Map<String,AttributeValue> getValues() {
         return values;
     }
 
-    public void setValues(List<AttributeValue> values) {
+    public void setValues(Map<String,AttributeValue> values) {
         this.values = values;
     }
 
@@ -92,15 +82,19 @@ public class Attribute {
 
     public void calculateEntrypy() {
         int total = 0;
-        for (int i = 0; i < values.size(); i++) {
-            total+=values.get(i).frequency;
+        Set<String> strings = values.keySet();
+        for(String key:strings) {
+            total+=values.get(key).getFrequency();
         }
         entrypy = 0;
-        for (int i = 0; i < values.size(); i++) {
-            double p = values.get(i).frequency / total;
-            entrypy = entrypy - p * (Math.log(p)/Math.log(2));
+        for(String key:strings) {
+            double p = (double) (values.get(key).getFrequency()) / total;
+            logger.info("Probability:" +key+":"+p);
+            entrypy = entrypy - p * (Math.log(p) / Math.log(2));
         }
+
         logger.info("Entropy calculated: " + name + ": "+entrypy);
+        logger.info("--------------------------------------------------------------------------------");
 
     }
 
@@ -110,5 +104,13 @@ public class Attribute {
 
     public void setEntrypy(double entrypy) {
         this.entrypy = entrypy;
+    }
+
+    public void cleanUp(){
+        Set<String> strings = values.keySet();
+        for (String key : strings) {
+            values.get(key).setFrequency(0);
+        }
+        entrypy=0;
     }
 }

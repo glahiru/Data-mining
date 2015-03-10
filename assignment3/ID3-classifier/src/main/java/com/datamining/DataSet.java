@@ -23,29 +23,46 @@ package com.datamining;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DataSet {
     private final static Logger logger = LoggerFactory.getLogger(DataSet.class);
 
-    int classIndex;
+    private String className;
 
-    DataSetDefinition definition;
+    private DataSetDefinition definition;
 
-    List<TupleInstance> dataPoint;
+    private List<TupleInstance> dataPoint;
 
-    List<Attribute> featureList;
+    private Map<String,Attribute> featureList;
 
-    public DataSet() {
+    private UUID id;
+
+    public DataSet(String className) {
+        this.dataPoint = new ArrayList<TupleInstance>();
+        this.id = UUID.randomUUID();
+        this.className = className;
     }
 
-    public DataSet(DataSetDefinition definition, List<TupleInstance> dataPoint) {
+    public DataSet(String className,DataSetDefinition definition) {
         this.definition = definition;
-        this.dataPoint = dataPoint;
+        this.dataPoint = new ArrayList<TupleInstance>();
+        this.id = UUID.randomUUID();
+        this.className = className;
     }
 
-    public void addDataPoint(TupleInstance instance){
+    public void addDataPoint(TupleInstance instance) {
+        // here frequencies should be updated
+        Iterator<String> iterator = instance.getValues().keySet().iterator();
+        while(iterator.hasNext()){
+            String attributeName = iterator.next();
+            String attributeValue = instance.getValues().get(attributeName);
+            Attribute attribute = this.definition.getAttributes().get(attributeName);
+            if(attribute!=null) {
+                AttributeValue attributeValue1 = attribute.getValues().get(attributeValue);
+                attributeValue1.incrementFrequence();
+            }
+        }
         dataPoint.add(instance);
     }
 
@@ -62,36 +79,17 @@ public class DataSet {
         return dataPoint;
     }
 
-    public void setDataPoint(List<TupleInstance> dataPoint) {
-        this.dataPoint = dataPoint;
-    }
 
-    public int getClassIndex() {
-        return classIndex;
-    }
-
-    public void setClassIndex(int classIndex) {
-        this.classIndex = classIndex;
-    }
-
-    public List<Attribute> getFeatureList() {
+    public Map<String,Attribute> getFeatureList() {
         return featureList;
     }
 
-    public void setFeatureList(List<Attribute> featureList) {
+    public void setFeatureList(Map<String,Attribute> featureList) {
         this.featureList = featureList;
     }
 
 
-    public boolean allInOneClass() {
-        String firstClassValue = dataPoint.get(0).getValues().get(classIndex);
-        for (int i = 0; i < dataPoint.size(); i++) {
-            if(!dataPoint.get(i).getValues().get(classIndex).equals(firstClassValue)){
-                return false;
-            }
-        }
-        return true;
-    }
+
 
     public boolean isEmpty() {
         if(dataPoint.size()==0){
@@ -107,58 +105,92 @@ public class DataSet {
         return false;
     }
 
-    public List<Attribute> removeFeature(String name) {
-        int index = -1;
-        for (int i = 0; i < featureList.size(); i++) {
-            if (featureList.get(i).getName().equals(name)) {
-                index = i;
-            }
-        }
-        if(index != -1) {
-            featureList.remove(index);
-        }
+    public Map<String,Attribute> removeFeature(String name) {
+        featureList.remove(name);
         return featureList;
     }
 
-    List<DataSet> splitByAttribute(DataSet dataSet,Attribute attribute) {
-        int attributeIndex = dataSet.getDefinition().getIndex(attribute.getName());
-        ArrayList<DataSet> dataSets = new ArrayList<DataSet>();
-        for (int i = 0; i < attribute.getValues().size(); i++) {
-            DataSet dataSet1 = new DataSet(dataSet.getDefinition(), null);
+    Map<String,DataSet> splitByAttribute(DataSet dataSet,Attribute attribute) {
+        Map<String,DataSet> dataSets = new HashMap<String, DataSet>();
+
+        Iterator<Map.Entry<String, AttributeValue>> iterator = attribute.getValues().entrySet().iterator();
+        while(iterator.hasNext()){
+            Map.Entry<String, AttributeValue> next = iterator.next();
+            DataSet dataSet1 = new DataSet(className,dataSet.getDefinition());
+            dataSet1.cleanUpCounts();
             dataSet1.setFeatureList(dataSet.removeFeature(attribute.getName())); // we remove the selected attribute from feature list
-            dataSets.add(new DataSet(dataSet.getDefinition(), null));
-        }
-        for (int i = 0; i < dataSet.getDataPoint().size(); i++) {
-            TupleInstance tupleInstance = dataSet.getDataPoint().get(i);
-            String s = tupleInstance.getValues().get(attributeIndex);
-            Attribute attributeByName = dataSet.getDefinition().getAttributeByName(s);
-            if(attributeByName==null){
-                logger.error("Wrong input is given in training dataset");
-                // in this case we drop this tuple because the value in this feature cannot be used
-            }else {
-                int i1 = dataSet.getDefinition().getAttributes().indexOf(attributeByName);
-                dataSets.get(i1).addDataPoint(tupleInstance);
-            }
+            dataSets.put(next.getValue().getValue(), dataSet1);
 
         }
+
+        for (int i = 0; i < dataSet.getDataPoint().size(); i++) {
+            TupleInstance tupleInstance = dataSet.getDataPoint().get(i);
+            String s = tupleInstance.getValues().get(attribute.getName());
+            dataSets.get(s).addDataPoint(tupleInstance);
+        }
+        logger.info("Data set " + dataSet.getId() + " is split in to " + dataSets.size() + " subsets based on attribute: " + attribute.getName());
         return dataSets;
     }
 
     public void calculateEntropies() {
-        for (int i = 0; i < featureList.size(); i++) {
-            getFeatureList().get(i).calculateEntrypy();
+        Iterator<Map.Entry<String, Attribute>> iterator = featureList.entrySet().iterator();
+        while(iterator.hasNext()){
+            Map.Entry<String, Attribute> next = iterator.next();
+            next.getValue().calculateEntrypy();
         }
     }
 
     public Attribute getMinEntropyAttribute() {
-        Attribute minEntropyAttr = getFeatureList().get(0);
-        for (int i = 0; i < featureList.size(); i++) {
-            Attribute attribute = getFeatureList().get(i);
-            if(minEntropyAttr.getEntrypy()>attribute.getEntrypy()){
-                minEntropyAttr = attribute;
+        Attribute minEntropyAttr = featureList.get(featureList.keySet().iterator().next());
+        Iterator<Map.Entry<String, Attribute>> iterator = featureList.entrySet().iterator();
+        while(iterator.hasNext()){
+            Map.Entry<String, Attribute> next = iterator.next();
+            next.getValue().calculateEntrypy();
+            if(minEntropyAttr.getEntrypy()>next.getValue().getEntrypy()){
+                minEntropyAttr = next.getValue();
             }
         }
         return minEntropyAttr;
+    }
+
+    public boolean allInOneClass() {
+        if(dataPoint.size()>0) {
+            String firstTupleClassValue = dataPoint.get(0).getValues().get(className);
+            for (int i = 0; i < dataPoint.size(); i++) {
+                if (!dataPoint.get(i).getValues().get(className).equals(firstTupleClassValue)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public String getClassifiedClassName() {
+        if(allInOneClass()){
+            return dataPoint.get(0).getValues().get(className);
+        }else {
+            return "n/a";
+        }
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void cleanUpCounts(){
+        this.definition.cleanupCounts();
     }
 }
 

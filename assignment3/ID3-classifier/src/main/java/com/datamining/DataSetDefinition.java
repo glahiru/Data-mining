@@ -23,43 +23,38 @@ package com.datamining;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class DataSetDefinition {
     private final static Logger logger = LoggerFactory.getLogger(DataSetDefinition.class);
 
-    List<Attribute> attributes;
+    Map<String,Attribute> attributes;
 
 
-    public DataSetDefinition(List<Attribute> attributes) {
+    public DataSetDefinition(Map<String,Attribute> attributes) {
         this.attributes = attributes;
     }
 
-    public List<Attribute> getAttributes() {
+    public Map<String,Attribute> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(List<Attribute> attributes) {
+    public void setAttributes(Map<String,Attribute> attributes) {
         this.attributes = attributes;
     }
 
     public Attribute getAttributeByName(String name) {
-        for (int i = 0; i < attributes.size(); i++) {
-            Attribute attribute = attributes.get(i);
-            if (attribute.getName().equals(name)) {
-                return attribute;
-            }
-        }
-        return null;
+        return attributes.get(name);
     }
 
-    public int getIndex(String attributeName) {
-        for (int i = 0; i < attributes.size(); i++) {
-            Attribute attribute = attributes.get(i);
-            if (attribute.getName().equals(attributeName)) {
-                return i;
-            }
+    public void cleanupCounts(){
+        Iterator<Map.Entry<String, Attribute>> iterator = attributes.entrySet().iterator();
+        while(iterator.hasNext()){
+            Map.Entry<String, Attribute> next = iterator.next();
+            next.getValue().cleanUp();
         }
-        return -1;
     }
 }

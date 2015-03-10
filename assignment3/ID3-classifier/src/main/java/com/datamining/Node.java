@@ -24,28 +24,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Node {
     private final static Logger logger = LoggerFactory.getLogger(Node.class);
 
     private Attribute attribute;
 
-    private List<Node> children;
+    private Map<String,Node> children;
 
     private String finalClassName;
 
+    private DataSet dataSet;
+
+    private Node parentNode;
+
+    private String baseValue;
+
+
     public Node() {
+        this.children = new HashMap<String, Node>(); // empty children
+        this.parentNode = null;
     }
 
-    public Node(Attribute attribute) {
+    public Node(Attribute attribute, DataSet dataSet, Node parentNode) {
         this.attribute = attribute;
-        this.children = new ArrayList<Node>(); // empty children
-    }
-
-    public Node(Attribute attribute, List<Node> children) {
-        this.attribute = attribute;
-        this.children = children;
+        this.children = new HashMap<String, Node>();  // empty children
+        this.dataSet = dataSet;
+        this.parentNode = parentNode;
     }
 
     public boolean isLeafNode() {
@@ -63,15 +71,49 @@ public class Node {
         this.attribute = attribute;
     }
 
-    public List<Node> getChildren() {
+    public Map<String,Node> getChildren() {
         return children;
     }
 
-    public void setChildren(List<Node> children) {
+    public void setChildren(Map<String,Node> children) {
         this.children = children;
     }
 
-    public void addChild(Node node) {
-        children.add(node);
+    public void addChild(String value, Node node) {
+        node.setParentNode(this); //
+        node.setBaseValue(value);
+        children.put(value, node);
+    }
+
+    public DataSet getDataSet() {
+        return dataSet;
+    }
+
+    public void setDataSet(DataSet dataSet) {
+        this.dataSet = dataSet;
+    }
+
+    public Node getParentNode() {
+        return parentNode;
+    }
+
+    public void setParentNode(Node parentNode) {
+        this.parentNode = parentNode;
+    }
+
+    public String getFinalClassName() {
+        return finalClassName;
+    }
+
+    public void setFinalClassName(String finalClassName) {
+        this.finalClassName = finalClassName;
+    }
+
+    public String getBaseValue() {
+        return baseValue;
+    }
+
+    public void setBaseValue(String baseValue) {
+        this.baseValue = baseValue;
     }
 }
