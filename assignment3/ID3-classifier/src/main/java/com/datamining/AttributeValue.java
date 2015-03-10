@@ -43,6 +43,12 @@ public class AttributeValue {
         this.frequency = frequency;
     }
 
+    public AttributeValue(AttributeValue attributeValue) {
+        this.setProbabilities(attributeValue.getProbabilities());
+        this.setValue(attributeValue.getValue());
+        this.setFrequency(attributeValue.getFrequency());
+    }
+
     public void incrementFrequence() {
         this.frequency++;
     }

@@ -46,13 +46,17 @@ public class ID3tree {
 
     private String mostFrequentClassValue;          // when a particular leaf node doesn't have any value we set this classValue
 
-
+    List<TupleInstance> testData;
 
     public ID3tree() {
         rootNode = new Node();
-        featureAttributes = new HashMap<String,Attribute>();
+        featureAttributes = new HashMap<String, Attribute>();
+        testData = new ArrayList<TupleInstance>();
     }
 
+    /**
+     * This is the very first method to invoke to build the classifier
+     */
     public DataSet loadData(String[] args) {
         Map<String,Attribute> attributes = new HashMap<String,Attribute>();
         ArrayList<TupleInstance> tupleInstances = new ArrayList<TupleInstance>();
@@ -109,10 +113,12 @@ public class ID3tree {
 
                                 String[] split = line1.split("\t");
                                 HashMap<String, String> tupleData = new HashMap<String, String>();
-
+                                // adding the train data list
                                 for (int i = 0; i < split.length ; i++) {
                                     tupleData.put(tempAttributeLisy.get(i).getName(), split[i]);
                                 }
+
+                                // updating the attribute frequencies while adding tuples
                                 for (int i = 0; i < split.length ; i++) {
                                     attributes.get(tempAttributeLisy.get(i).getName()).addValue(split[i]);
                                 }
@@ -139,6 +145,20 @@ public class ID3tree {
             try {
                 while ((line = bufferedReader.readLine()) != null) {
                     logger.info(line);
+                    String[] split = line.split("\t");
+                    if(split.length!=featureNames.size()) {
+                        logger.error("Wrong input, all the feature values should be there in the tests");
+                        logger.error("data:" + line + " will not be tested");
+                    }else {
+                        HashMap<String, String> tupleData = new HashMap<String, String>();
+
+                        for (int i = 0; i < split.length; i++) {
+                            tupleData.put(featureNames.get(i), split[i]);
+                        }
+
+                        testData.add(new TupleInstance(tupleData));
+                    }
+
                 }
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
@@ -170,7 +190,41 @@ public class ID3tree {
     }
 
 
+    /**
+     * This method should be invoked after loadData and buildClassifier operations
+     * so the ID3 is ready to the the classification
+     *
+     * @param tupleInstance
+     */
+    public void runClassifier(TupleInstance tupleInstance) {
 
+        System.out.print("tuple:    ");
+        Iterator<Map.Entry<String, String>> iterator = tupleInstance.getValues().entrySet().iterator();
+        while(iterator.hasNext()){
+            String value = iterator.next().getValue();
+            System.out.print(value+"    ");
+        }
+
+        Node node = rootNode;
+        while (!node.isLeafNode()) {
+            Node node1 = node.getChildren().get(tupleInstance.getValues().get(node.getAttribute().getName()));
+            if(node1==null){
+                break;
+            }else{
+                node = node1;
+            }
+        }
+        System.out.print("\nclass:    ");
+        System.out.println(node.getFinalClassName());
+        System.out.println("\n");
+
+    }
+
+    public void runAllTests(){
+        for(TupleInstance tupleInstance:testData){
+            runClassifier(tupleInstance);
+        }
+    }
 
     /**
      * After loading the dataset now we are building the classification Tree

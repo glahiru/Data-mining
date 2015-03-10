@@ -42,6 +42,21 @@ public class Attribute {
         this.tupleIndex = tupleIndex;
     }
 
+    public Attribute(Attribute attribute) {
+        HashMap<String, AttributeValue> stringAttributeValueHashMap = new HashMap<String, AttributeValue>();
+        Iterator<Map.Entry<String, AttributeValue>> iterator = attribute.getValues().entrySet().iterator();
+        while(iterator.hasNext()){
+            Map.Entry<String, AttributeValue> next = iterator.next();
+            AttributeValue value = next.getValue();
+            AttributeValue attributeValue = new AttributeValue(value);
+            stringAttributeValueHashMap.put(next.getKey(), attributeValue);
+        }
+        this.name = attribute.getName();
+        this.values = stringAttributeValueHashMap;
+        this.tupleIndex = attribute.getTupleIndex();
+        this.entrypy = attribute.entrypy;
+    }
+
     public Attribute(String name, int tupleIndex) {
         this.name = name;
         this.values = new HashMap<String, AttributeValue>();

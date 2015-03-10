@@ -43,6 +43,6 @@ public class ID3treeTest {
         id3tree.printDataSet();
         id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
         id3tree.printID3Tree();
-
+        id3tree.runAllTests();
     }
 }

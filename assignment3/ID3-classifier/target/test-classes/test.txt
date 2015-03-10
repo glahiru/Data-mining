@@ -1,2 +1,4 @@
 bad	rain
 ugly	snow
+bad	snow
+good	cloudy

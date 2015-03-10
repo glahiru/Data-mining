@@ -23,16 +23,23 @@ package com.datamining;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DataSetDefinition {
     private final static Logger logger = LoggerFactory.getLogger(DataSetDefinition.class);
 
     Map<String,Attribute> attributes;
 
+
+    public DataSetDefinition(DataSetDefinition dataSetDefinition) {
+        Iterator<Map.Entry<String, Attribute>> iterator = dataSetDefinition.getAttributes().entrySet().iterator();
+        Map<String, Attribute> attributes = new HashMap<String, Attribute>();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Attribute> next = iterator.next();
+            attributes.put(next.getKey(),new Attribute(next.getValue()));
+        }
+        this.attributes = attributes;
+    }
 
     public DataSetDefinition(Map<String,Attribute> attributes) {
         this.attributes = attributes;

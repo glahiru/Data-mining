@@ -84,6 +84,7 @@ public class DataSet {
         return featureList;
     }
 
+
     public void setFeatureList(Map<String,Attribute> featureList) {
         this.featureList = featureList;
     }
@@ -116,9 +117,11 @@ public class DataSet {
         Iterator<Map.Entry<String, AttributeValue>> iterator = attribute.getValues().entrySet().iterator();
         while(iterator.hasNext()){
             Map.Entry<String, AttributeValue> next = iterator.next();
-            DataSet dataSet1 = new DataSet(className,dataSet.getDefinition());
+            DataSet dataSet1 = new DataSet(className, new DataSetDefinition(dataSet.getDefinition()));
             dataSet1.cleanUpCounts();
-            dataSet1.setFeatureList(dataSet.removeFeature(attribute.getName())); // we remove the selected attribute from feature list
+            Map<String, Attribute> featureList1 = new HashMap<String, Attribute>(dataSet.getFeatureList());
+            featureList1.remove(attribute.getName());
+            dataSet1.setFeatureList(featureList1); // we remove the selected attribute from feature list
             dataSets.put(next.getValue().getValue(), dataSet1);
 
         }
