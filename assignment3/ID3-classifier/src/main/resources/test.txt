@@ -1,2 +1,2 @@
-bad     rain
-ugly    snow
+bad	rain
+ugly	snow

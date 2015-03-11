@@ -31,6 +31,9 @@ import java.nio.file.Files;
 public class ID3treeTest {
     private final static Logger logger = LoggerFactory.getLogger(ID3treeTest.class);
 
+    /**
+     * Class is C
+     */
     @Test
     public void test() {
         String[] args = new String[2];
@@ -39,7 +42,25 @@ public class ID3treeTest {
 
 
         ID3tree id3tree = new ID3tree();
-        id3tree.loadData(args);
+        id3tree.loadData(args,true);
+        id3tree.printDataSet();
+        id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
+        id3tree.printID3Tree();
+        id3tree.runAllTests();
+    }
+
+    /**
+     * Class is B
+     */
+    @Test
+    public void testTree1() {
+        String[] args = new String[2];
+        args[0] = "tree1.txt";
+        args[1] = "test.txt";
+
+
+        ID3tree id3tree = new ID3tree();
+        id3tree.loadData(args,true);
         id3tree.printDataSet();
         id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
         id3tree.printID3Tree();

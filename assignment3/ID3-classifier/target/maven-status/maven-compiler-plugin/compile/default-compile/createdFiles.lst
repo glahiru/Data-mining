@@ -1,7 +1,8 @@
 com/datamining/DataSet.class
-com/datamining/Attribute.class
-com/datamining/TupleInstance.class
 com/datamining/Node.class
 com/datamining/AttributeValue.class
-com/datamining/DataSetDefinition.class
 com/datamining/ID3tree.class
+com/datamining/utils/CommonUtils.class
+com/datamining/Attribute.class
+com/datamining/TupleInstance.class
+com/datamining/DataSetDefinition.class

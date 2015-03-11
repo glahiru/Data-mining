@@ -34,36 +34,69 @@ public class DataSet {
 
     private List<TupleInstance> dataPoint;
 
-    private Map<String,Attribute> featureList;
+    private Map<String, Attribute> featureList;
 
     private UUID id;
+
+    private int total;
+
+    private Map<String, Integer> classCount;
+
+    private Map<String, Double> classProbabilities;
 
     public DataSet(String className) {
         this.dataPoint = new ArrayList<TupleInstance>();
         this.id = UUID.randomUUID();
         this.className = className;
+        this.classProbabilities = new HashMap<String, Double>();
+        this.classCount = new HashMap<String, Integer>();
     }
 
-    public DataSet(String className,DataSetDefinition definition) {
+    public DataSet(String className, DataSetDefinition definition) {
         this.definition = definition;
         this.dataPoint = new ArrayList<TupleInstance>();
         this.id = UUID.randomUUID();
         this.className = className;
+        this.classProbabilities = new HashMap<String, Double>();
+        this.classCount = new HashMap<String, Integer>();
     }
 
     public void addDataPoint(TupleInstance instance) {
         // here frequencies should be updated
+        total +=1;
+
         Iterator<String> iterator = instance.getValues().keySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             String attributeName = iterator.next();
             String attributeValue = instance.getValues().get(attributeName);
             Attribute attribute = this.definition.getAttributes().get(attributeName);
-            if(attribute!=null) {
+            if (attribute != null) {
                 AttributeValue attributeValue1 = attribute.getValues().get(attributeValue);
                 attributeValue1.incrementFrequence();
             }
+            if (attributeName.equals(className)) {
+                Integer aDouble = classCount.get(attributeValue);
+
+                if (aDouble == null) {
+                    classCount.put(attributeValue, 1);
+                } else {
+                    int i = aDouble.intValue();
+                    classCount.put(attributeValue,i + 1);
+                }
+            }
         }
         dataPoint.add(instance);
+    }
+
+    public double getClassProbabilityByName(String className) {
+        Integer integer = classCount.get(className);
+        if(integer==null){
+            integer=0;
+        }
+        if(total==0){
+            return -1;
+        }
+        return (double)integer / total;
     }
 
 
@@ -80,42 +113,40 @@ public class DataSet {
     }
 
 
-    public Map<String,Attribute> getFeatureList() {
+    public Map<String, Attribute> getFeatureList() {
         return featureList;
     }
 
 
-    public void setFeatureList(Map<String,Attribute> featureList) {
+    public void setFeatureList(Map<String, Attribute> featureList) {
         this.featureList = featureList;
     }
 
 
-
-
     public boolean isEmpty() {
-        if(dataPoint.size()==0){
+        if (dataPoint.size() == 0) {
             return true;
         }
         return false;
     }
 
-    public boolean isFeaturesEmpty(){
-        if(featureList.size()==0){
+    public boolean isFeaturesEmpty() {
+        if (featureList.size() == 0) {
             return true;
         }
         return false;
     }
 
-    public Map<String,Attribute> removeFeature(String name) {
+    public Map<String, Attribute> removeFeature(String name) {
         featureList.remove(name);
         return featureList;
     }
 
-    Map<String,DataSet> splitByAttribute(DataSet dataSet,Attribute attribute) {
-        Map<String,DataSet> dataSets = new HashMap<String, DataSet>();
+    Map<String, DataSet> splitByAttribute(DataSet dataSet, Attribute attribute) {
+        Map<String, DataSet> dataSets = new HashMap<String, DataSet>();
 
         Iterator<Map.Entry<String, AttributeValue>> iterator = attribute.getValues().entrySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             Map.Entry<String, AttributeValue> next = iterator.next();
             DataSet dataSet1 = new DataSet(className, new DataSetDefinition(dataSet.getDefinition()));
             dataSet1.cleanUpCounts();
@@ -137,7 +168,7 @@ public class DataSet {
 
     public void calculateEntropies() {
         Iterator<Map.Entry<String, Attribute>> iterator = featureList.entrySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             Map.Entry<String, Attribute> next = iterator.next();
             next.getValue().calculateEntrypy();
         }
@@ -146,10 +177,10 @@ public class DataSet {
     public Attribute getMinEntropyAttribute() {
         Attribute minEntropyAttr = featureList.get(featureList.keySet().iterator().next());
         Iterator<Map.Entry<String, Attribute>> iterator = featureList.entrySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             Map.Entry<String, Attribute> next = iterator.next();
             next.getValue().calculateEntrypy();
-            if(minEntropyAttr.getEntrypy()>next.getValue().getEntrypy()){
+            if (minEntropyAttr.getEntrypy() > next.getValue().getEntrypy()) {
                 minEntropyAttr = next.getValue();
             }
         }
@@ -157,7 +188,7 @@ public class DataSet {
     }
 
     public boolean allInOneClass() {
-        if(dataPoint.size()>0) {
+        if (dataPoint.size() > 0) {
             String firstTupleClassValue = dataPoint.get(0).getValues().get(className);
             for (int i = 0; i < dataPoint.size(); i++) {
                 if (!dataPoint.get(i).getValues().get(className).equals(firstTupleClassValue)) {
@@ -169,9 +200,9 @@ public class DataSet {
     }
 
     public String getClassifiedClassName() {
-        if(allInOneClass()){
+        if (allInOneClass()) {
             return dataPoint.get(0).getValues().get(className);
-        }else {
+        } else {
             return "n/a";
         }
     }
@@ -192,7 +223,7 @@ public class DataSet {
         this.id = id;
     }
 
-    public void cleanUpCounts(){
+    public void cleanUpCounts() {
         this.definition.cleanupCounts();
     }
 }

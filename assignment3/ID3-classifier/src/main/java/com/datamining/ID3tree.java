@@ -37,11 +37,15 @@ public class ID3tree {
 
     private List<String> featureNames;
 
+    private List<Integer> featureIndexes;
+
     private Map<String,Attribute> featureAttributes;
 
     private DataSet dataSet;
 
     private Node rootNode;
+
+    private int classIndex;
 
 
     private String mostFrequentClassValue;          // when a particular leaf node doesn't have any value we set this classValue
@@ -52,12 +56,25 @@ public class ID3tree {
         rootNode = new Node();
         featureAttributes = new HashMap<String, Attribute>();
         testData = new ArrayList<TupleInstance>();
+        featureIndexes = new ArrayList<Integer>();
     }
+
+
+    public static void main(String[] args) {
+        ID3tree id3tree = new ID3tree();
+        id3tree.loadData(args,true);
+        id3tree.printDataSet();
+        id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
+        id3tree.printID3Tree();
+        id3tree.runAllTests();
+    }
+
+
 
     /**
      * This is the very first method to invoke to build the classifier
      */
-    public DataSet loadData(String[] args) {
+    public DataSet loadData(String[] args, boolean loadTestData) {
         Map<String,Attribute> attributes = new HashMap<String,Attribute>();
         ArrayList<TupleInstance> tupleInstances = new ArrayList<TupleInstance>();
         if (args.length != 2) {
@@ -128,9 +145,28 @@ public class ID3tree {
                         }
                     } else if (count == 1) {
                         className = line;
+                        int index = 0;
+                        for (Attribute attr : tempAttributeLisy) {
+                            if (attr.getName().equals(className)) {
+                                classIndex = index;
+                            }
+                            index++;
+                        }
+
+
                     } else if (count == 2) {
                         String[] split = line.split("\t");
                         featureNames = Arrays.asList(split);
+                        for (int i = 0; i < featureNames.size() ; i++) {
+                            String featureName = featureNames.get(i);
+                            int index = 0;
+                            for(Attribute attr:tempAttributeLisy){
+                                if(attr.getName().equals(featureName)){
+                                    featureIndexes.add(i,index);
+                                }
+                                index++;
+                            }
+                        }
                     }
                     count++;
                     logger.info(line);
@@ -139,29 +175,31 @@ public class ID3tree {
                 logger.error(e.getMessage(), e);
             }
 
-            logger.info("--------------------------------------------------------");
-            treeFileInputStream = new FileReader(testFile);
-            bufferedReader = new BufferedReader(treeFileInputStream);
-            try {
-                while ((line = bufferedReader.readLine()) != null) {
-                    logger.info(line);
-                    String[] split = line.split("\t");
-                    if(split.length!=featureNames.size()) {
-                        logger.error("Wrong input, all the feature values should be there in the tests");
-                        logger.error("data:" + line + " will not be tested");
-                    }else {
-                        HashMap<String, String> tupleData = new HashMap<String, String>();
+            if(loadTestData) {
+                logger.info("--------------------------------------------------------");
+                treeFileInputStream = new FileReader(testFile);
+                bufferedReader = new BufferedReader(treeFileInputStream);
+                try {
+                    while ((line = bufferedReader.readLine()) != null) {
+                        logger.info(line);
+                        String[] split = line.split("\t");
+                        if (split.length != featureNames.size()) {
+                            logger.error("Wrong input, all the feature values should be there in the tests");
+                            logger.error("data:" + line + " will not be tested");
+                        } else {
+                            HashMap<String, String> tupleData = new HashMap<String, String>();
 
-                        for (int i = 0; i < split.length; i++) {
-                            tupleData.put(featureNames.get(i), split[i]);
+                            for (int i = 0; i < split.length; i++) {
+                                tupleData.put(featureNames.get(i), split[i]);
+                            }
+
+                            testData.add(new TupleInstance(tupleData));
                         }
 
-                        testData.add(new TupleInstance(tupleData));
                     }
-
+                } catch (IOException e) {
+                    logger.error(e.getMessage(), e);
                 }
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
             }
 
         } catch (FileNotFoundException e) {
@@ -184,10 +222,132 @@ public class ID3tree {
         return dataSet;
     }
 
-    void setMostFrequentClassValue() {
-        // after loading the dataset we have to calculate this
-        mostFrequentClassValue = getMostFrequentClassValue(this.dataSet);
+    public DataSet loadDataCV(File[] args, boolean loadTestData) {
+        Map<String,Attribute> attributes = new HashMap<String,Attribute>();
+        ArrayList<TupleInstance> tupleInstances = new ArrayList<TupleInstance>();
+        if (args.length != 3) {
+            logger.error("You should give the treeFile and testFilePath and trainingFile");
+            return null;
+        }
+
+        File treeFile = args[0];
+        File testFile = args[1];
+        logger.debug("--------------------------------------------------------");
+        ArrayList<Attribute> tempAttributeLisy = new ArrayList<Attribute>();
+        try {
+            FileReader treeFileInputStream = new FileReader(treeFile);
+            BufferedReader bufferedReader = new BufferedReader(treeFileInputStream);
+            String line = null;
+            String line1 = null;
+            int count = 0;
+            try {
+                while ((line = bufferedReader.readLine()) != null) {
+                    if (count == 0) {
+                        FileReader fileReader = new FileReader(args[2]);
+                        BufferedReader bufferedReader1 = new BufferedReader(fileReader);
+                        int count1 = 0;
+                        while ((line1 = bufferedReader1.readLine()) != null) {
+                            if (count1 == 0) {
+                                String[] split = line1.split("\t");
+                                for (int i = 0; i < split.length; i++) {
+                                    Attribute attribute = new Attribute(split[i], i);
+                                    attributes.put(split[i], attribute);
+                                    tempAttributeLisy.add(attribute);
+                                }
+                            }else {
+
+                                String[] split = line1.split("\t");
+                                HashMap<String, String> tupleData = new HashMap<String, String>();
+                                // adding the train data list
+                                for (int i = 0; i < split.length ; i++) {
+                                    tupleData.put(tempAttributeLisy.get(i).getName(), split[i]);
+                                }
+
+                                // updating the attribute frequencies while adding tuples
+                                for (int i = 0; i < split.length ; i++) {
+                                    attributes.get(tempAttributeLisy.get(i).getName()).addValue(split[i]);
+                                }
+                                tupleInstances.add(new TupleInstance(tupleData));
+                            }
+                            count1++;
+                        }
+                    } else if (count == 1) {
+                        className = line;
+                        int index = 0;
+                        for (Attribute attr : tempAttributeLisy) {
+                            if (attr.getName().equals(className)) {
+                                classIndex = index;
+                            }
+                            index++;
+                        }
+                    } else if (count == 2) {
+                        String[] split = line.split("\t");
+                        featureNames = Arrays.asList(split);
+                        for (int i = 0; i < featureNames.size() ; i++) {
+                            String featureName = featureNames.get(i);
+                            int index = 0;
+                            for(Attribute attr:tempAttributeLisy){
+                                if(attr.getName().equals(featureName)){
+                                    featureIndexes.add(i,index);
+                                }
+                                index++;
+                            }
+                        }
+                    }
+                    count++;
+                    logger.info(line);
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+            }
+
+            if(loadTestData) {
+                logger.debug("--------------------------------------------------------");
+                treeFileInputStream = new FileReader(testFile);
+                bufferedReader = new BufferedReader(treeFileInputStream);
+                try {
+                    while ((line = bufferedReader.readLine()) != null) {
+                        logger.info(line);
+                        String[] split = line.split("\t");
+                        if (split.length != featureNames.size()) {
+                            logger.error("Wrong input, all the feature values should be there in the tests");
+                            logger.error("data:" + line + " will not be tested");
+                        } else {
+                            HashMap<String, String> tupleData = new HashMap<String, String>();
+
+                            for (int i = 0; i < split.length; i++) {
+                                tupleData.put(featureNames.get(i), split[i]);
+                            }
+
+                            testData.add(new TupleInstance(tupleData));
+                        }
+
+                    }
+                } catch (IOException e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
+
+        } catch (FileNotFoundException e) {
+            logger.error(e.getMessage(), e);
+        }
+        logger.debug("--------------------------------------------------------");
+
+
+
+        for(String feather:featureNames) {
+            featureAttributes.put(feather, attributes.get(feather));
+        }
+        dataSet = new DataSet(className);
+        dataSet.setDefinition(new DataSetDefinition(attributes));
+        dataSet.setFeatureList(featureAttributes);
+        for(TupleInstance instance:tupleInstances){
+            dataSet.addDataPoint(instance);
+        }
+        rootNode.setDataSet(dataSet);
+        return dataSet;
     }
+
 
 
     /**
@@ -196,8 +356,8 @@ public class ID3tree {
      *
      * @param tupleInstance
      */
-    public void runClassifier(TupleInstance tupleInstance) {
-
+    public String runClassifier(TupleInstance tupleInstance) {
+        System.out.println("\n");
         System.out.print("tuple:    ");
         Iterator<Map.Entry<String, String>> iterator = tupleInstance.getValues().entrySet().iterator();
         while(iterator.hasNext()){
@@ -215,8 +375,24 @@ public class ID3tree {
             }
         }
         System.out.print("\nclass:    ");
-        System.out.println(node.getFinalClassName());
-        System.out.println("\n");
+
+        Iterator<Map.Entry<String, AttributeValue>> iterator1 = dataSet.getDefinition().getAttributes().get(className).getValues().entrySet().iterator();
+        boolean totalZero = false;
+        while(iterator1.hasNext()){
+            Map.Entry<String, AttributeValue> next = iterator1.next();
+            double classProbabilityByName = node.getDataSet().getClassProbabilityByName(next.getValue().getValue());
+            if (classProbabilityByName == -1) {
+                totalZero=true;
+                System.out.print(next.getKey() + ": 0.0" + "    ");
+            } else {
+                System.out.print(next.getKey() + ":" + node.getDataSet().getClassProbabilityByName(next.getValue().getValue()) + "    ");
+            }
+        }
+
+        if(totalZero){
+            System.out.print("most frequent class:" + getMostFrequentClassValue(dataSet));
+        }
+        return getMostFrequentClassValue(node.getDataSet());
 
     }
 
@@ -224,6 +400,20 @@ public class ID3tree {
         for(TupleInstance tupleInstance:testData){
             runClassifier(tupleInstance);
         }
+    }
+
+    public int runAllTestsCV(List<String> knownClasses) {
+        int count = 0;
+        for (int i = 0; i < testData.size(); i++) {
+            String s = runClassifier(testData.get(i));
+            if (s.equals(knownClasses.get(i))) {
+                count++;
+                System.out.println("Correct Results");
+            }else {
+                System.out.println("Incorrect Results");
+            }
+        }
+        return count;
     }
 
     /**
@@ -262,9 +452,9 @@ public class ID3tree {
         // take the first one as most frequent attribute
         AttributeValue mostFrequestAttribute = classAttribute.getValues().entrySet().iterator().next().getValue();
         Iterator<Map.Entry<String, AttributeValue>> iterator = classAttribute.getValues().entrySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             Map.Entry<String, AttributeValue> next = iterator.next();
-            if(mostFrequestAttribute.getFrequency()<next.getValue().getFrequency()){
+            if (mostFrequestAttribute.getFrequency() < next.getValue().getFrequency()) {
                 mostFrequestAttribute = next.getValue();
             }
         }
@@ -413,5 +603,39 @@ public class ID3tree {
 
     public void setRootNode(Node rootNode) {
         this.rootNode = rootNode;
+    }
+
+
+
+    public List<Integer> getFeatureIndexes() {
+        return featureIndexes;
+    }
+
+    public void setFeatureIndexes(List<Integer> featureIndexes) {
+        this.featureIndexes = featureIndexes;
+    }
+
+    public String getMostFrequentClassValue() {
+        return mostFrequentClassValue;
+    }
+
+    public void setMostFrequentClassValue(String mostFrequentClassValue) {
+        this.mostFrequentClassValue = mostFrequentClassValue;
+    }
+
+    public List<TupleInstance> getTestData() {
+        return testData;
+    }
+
+    public void setTestData(List<TupleInstance> testData) {
+        this.testData = testData;
+    }
+
+    public int getClassIndex() {
+        return classIndex;
+    }
+
+    public void setClassIndex(int classIndex) {
+        this.classIndex = classIndex;
     }
 }
