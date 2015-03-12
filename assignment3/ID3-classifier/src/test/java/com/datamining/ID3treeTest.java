@@ -35,7 +35,7 @@ public class ID3treeTest {
      * Class is C
      */
     @Test
-    public void test() {
+    public void test() throws FileNotFoundException {
         String[] args = new String[2];
         args[0] = "tree.txt";
         args[1] = "test.txt";
@@ -53,7 +53,7 @@ public class ID3treeTest {
      * Class is B
      */
     @Test
-    public void testTree1() {
+    public void testTree1() throws FileNotFoundException {
         String[] args = new String[2];
         args[0] = "tree1.txt";
         args[1] = "test.txt";

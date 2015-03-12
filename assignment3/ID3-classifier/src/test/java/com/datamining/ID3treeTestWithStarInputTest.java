@@ -20,38 +20,30 @@
 */
 package com.datamining;
 
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
+import java.io.FileNotFoundException;
 
-public class TupleInstance {
-    private final static Logger logger = LoggerFactory.getLogger(TupleInstance.class);
+public class ID3treeTestWithStarInputTest {
+    private final static Logger logger = LoggerFactory.getLogger(ID3treeTestWithStarInputTest.class);
 
-    private Map<String,String> values;
+    /**
+     * Class is C
+     */
+    @Test
+    public void test() throws FileNotFoundException {
+        String[] args = new String[2];
+        args[0] = "tree.txt";
+        args[1] = "test2.txt";
 
-    private int lineNumber;
 
-    public TupleInstance(Map<String, String> values, int lineNumber) {
-        this.values = values;
-        this.lineNumber = lineNumber;
-    }
-
-    public Map<String,String> getValues() {
-        return values;
-    }
-
-    public void setValues(Map<
-            String,String> values) {
-        this.values = values;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
+        ID3tree id3tree = new ID3tree();
+        id3tree.loadData(args,true);
+        id3tree.printDataSet();
+        id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
+        id3tree.printID3Tree();
+        id3tree.runAllTests();
     }
 }

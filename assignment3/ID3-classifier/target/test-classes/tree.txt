@@ -1,4 +1,3 @@
 table.txt
-C
+B
 A	D
-

@@ -1,2 +1,3 @@
-com/datamining/ID3CrossvalidationTest.class
 com/datamining/ID3treeTest.class
+com/datamining/ID3treeCrossvalidationTest.class
+com/datamining/ID3treeTestWithStarInputTest.class

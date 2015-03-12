@@ -104,12 +104,12 @@ public class Attribute {
         entrypy = 0;
         for(String key:strings) {
             double p = (double) (values.get(key).getFrequency()) / total;
-            logger.info("Probability:" +key+":"+p);
+            logger.debug("Probability:" +key+":"+p);
             entrypy = entrypy - p * (Math.log(p) / Math.log(2));
         }
 
-        logger.info("Entropy calculated: " + name + ": "+entrypy);
-        logger.info("--------------------------------------------------------------------------------");
+        logger.debug("Entropy calculated: " + name + ": " + entrypy);
+        logger.debug("--------------------------------------------------------------------------------");
 
     }
 

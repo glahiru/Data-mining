@@ -47,6 +47,9 @@ public class ID3tree {
 
     private int classIndex;
 
+    private String testFileName;
+
+    private String treeFileName;
 
     private String mostFrequentClassValue;          // when a particular leaf node doesn't have any value we set this classValue
 
@@ -60,7 +63,7 @@ public class ID3tree {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
         ID3tree id3tree = new ID3tree();
         id3tree.loadData(args,true);
         id3tree.printDataSet();
@@ -81,25 +84,25 @@ public class ID3tree {
             logger.error("You should give the treeFile and testFilePath as inputs to run this program");
             return null;
         }
-        String treeFilePath = args[0];
-        String testFilePath = args[1];
+        treeFileName = args[0];
+        testFileName = args[1];
 
 
-        URL treeResource = ID3tree.class.getClassLoader().getResource(treeFilePath);
+        URL treeResource = ID3tree.class.getClassLoader().getResource(treeFileName);
         if (treeResource == null) {
-            logger.error("Make sure the file is in the classpath of the project: " + treeFilePath);
+            logger.error("Make sure the file is in the classpath of the project: " + treeFileName);
             return null;
         }
-        URL testResource = ID3tree.class.getClassLoader().getResource(testFilePath);
+        URL testResource = ID3tree.class.getClassLoader().getResource(testFileName);
         if (testResource == null) {
-            logger.error("Make sure the file is in the classpath of the project: " + testFilePath);
+            logger.error("Make sure the file is in the classpath of the project: " + testFileName);
             return null;
         }
-
+        logger.info(treeResource.getPath());
+        logger.info(testResource.getPath());
         URL trainResource = null;
 
         File treeFile = new File(treeResource.getPath());
-        File testFile = new File(testResource.getPath());
         logger.info("--------------------------------------------------------");
         ArrayList<Attribute> tempAttributeLisy = new ArrayList<Attribute>();
         try {
@@ -139,7 +142,7 @@ public class ID3tree {
                                 for (int i = 0; i < split.length ; i++) {
                                     attributes.get(tempAttributeLisy.get(i).getName()).addValue(split[i]);
                                 }
-                                tupleInstances.add(new TupleInstance(tupleData));
+                                tupleInstances.add(new TupleInstance(tupleData, 0));
                             }
                             count1++;
                         }
@@ -175,32 +178,19 @@ public class ID3tree {
                 logger.error(e.getMessage(), e);
             }
 
-            if(loadTestData) {
-                logger.info("--------------------------------------------------------");
-                treeFileInputStream = new FileReader(testFile);
-                bufferedReader = new BufferedReader(treeFileInputStream);
-                try {
-                    while ((line = bufferedReader.readLine()) != null) {
-                        logger.info(line);
-                        String[] split = line.split("\t");
-                        if (split.length != featureNames.size()) {
-                            logger.error("Wrong input, all the feature values should be there in the tests");
-                            logger.error("data:" + line + " will not be tested");
-                        } else {
-                            HashMap<String, String> tupleData = new HashMap<String, String>();
-
-                            for (int i = 0; i < split.length; i++) {
-                                tupleData.put(featureNames.get(i), split[i]);
-                            }
-
-                            testData.add(new TupleInstance(tupleData));
-                        }
-
-                    }
-                } catch (IOException e) {
-                    logger.error(e.getMessage(), e);
-                }
+            for(String feather:featureNames) {
+                featureAttributes.put(feather, attributes.get(feather));
             }
+            dataSet = new DataSet(className);
+            dataSet.setDefinition(new DataSetDefinition(attributes));
+            dataSet.setFeatureList(featureAttributes);
+            for(TupleInstance instance:tupleInstances){
+                dataSet.addDataPoint(instance);
+            }
+
+            loadTestData();
+
+            rootNode.setDataSet(dataSet);
 
         } catch (FileNotFoundException e) {
             logger.error(e.getMessage(), e);
@@ -209,19 +199,49 @@ public class ID3tree {
 
 
 
-        for(String feather:featureNames) {
-            featureAttributes.put(feather, attributes.get(feather));
-        }
-        dataSet = new DataSet(className);
-        dataSet.setDefinition(new DataSetDefinition(attributes));
-        dataSet.setFeatureList(featureAttributes);
-        for(TupleInstance instance:tupleInstances){
-            dataSet.addDataPoint(instance);
-        }
-        rootNode.setDataSet(dataSet);
         return dataSet;
     }
 
+    public void loadTestData() throws FileNotFoundException {
+        URL treeResource = ID3tree.class.getClassLoader().getResource(testFileName);
+        if (treeResource == null) {
+            logger.error("Make sure the file is in the classpath of the project: " + testFileName);
+            return;
+        }
+        String line = null;
+        logger.info("--------------------------------------------------------");
+        File treeFile = new File(treeResource.getPath());
+
+        FileReader treeFileInputStream = new FileReader(treeFile);
+        BufferedReader bufferedReader = new BufferedReader(treeFileInputStream);
+        int count=0;
+        try {
+            while ((line = bufferedReader.readLine()) != null) {
+                logger.info(line);
+                String[] split = line.split("\t");
+                if (split.length != featureNames.size()) {
+                    logger.error("Wrong input, all the feature values should be there in the tests");
+                    logger.error("data:" + line + " will not be tested");
+                } else {
+                    HashMap<String, String> tupleData = new HashMap<String, String>();
+
+                    for (int i = 0; i < split.length; i++) {
+                        if ("*".equals(split[i])) {
+                            logger.info("Empty intput came for testing so we set the most frequent attribute");
+                            tupleData.put(featureNames.get(i), getMostFrequentAttributeValue(dataSet, featureNames.get(i)));
+                        } else {
+                            tupleData.put(featureNames.get(i), split[i]);
+                        }
+                    }
+
+                    testData.add(new TupleInstance(tupleData, count));
+                }
+                count++;
+            }
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
     public DataSet loadDataCV(File[] args, boolean loadTestData) {
         Map<String,Attribute> attributes = new HashMap<String,Attribute>();
         ArrayList<TupleInstance> tupleInstances = new ArrayList<TupleInstance>();
@@ -267,7 +287,7 @@ public class ID3tree {
                                 for (int i = 0; i < split.length ; i++) {
                                     attributes.get(tempAttributeLisy.get(i).getName()).addValue(split[i]);
                                 }
-                                tupleInstances.add(new TupleInstance(tupleData));
+                                tupleInstances.add(new TupleInstance(tupleData, 0));
                             }
                             count1++;
                         }
@@ -305,6 +325,7 @@ public class ID3tree {
                 logger.debug("--------------------------------------------------------");
                 treeFileInputStream = new FileReader(testFile);
                 bufferedReader = new BufferedReader(treeFileInputStream);
+
                 try {
                     while ((line = bufferedReader.readLine()) != null) {
                         logger.info(line);
@@ -319,7 +340,7 @@ public class ID3tree {
                                 tupleData.put(featureNames.get(i), split[i]);
                             }
 
-                            testData.add(new TupleInstance(tupleData));
+                            testData.add(new TupleInstance(tupleData, 0));
                         }
 
                     }
@@ -356,14 +377,29 @@ public class ID3tree {
      *
      * @param tupleInstance
      */
-    public String runClassifier(TupleInstance tupleInstance) {
+    public String runClassifier(TupleInstance tupleInstance) throws FileNotFoundException {
         System.out.println("\n");
         System.out.print("tuple:    ");
-        Iterator<Map.Entry<String, String>> iterator = tupleInstance.getValues().entrySet().iterator();
-        while(iterator.hasNext()){
-            String value = iterator.next().getValue();
-            System.out.print(value+"    ");
+
+        URL treeResource = ID3tree.class.getClassLoader().getResource(testFileName);
+        String line = null;
+        logger.info("--------------------------------------------------------");
+        File treeFile = new File(treeResource.getPath());
+
+        FileReader treeFileInputStream = new FileReader(treeFile);
+        BufferedReader bufferedReader = new BufferedReader(treeFileInputStream);
+        int count=0;
+        try {
+            while ((line = bufferedReader.readLine()) != null) {
+                if(count==tupleInstance.getLineNumber()) {
+                    System.out.print(line + "    ");
+                }
+
+            }
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
         }
+
 
         Node node = rootNode;
         while (!node.isLeafNode()) {
@@ -395,17 +431,55 @@ public class ID3tree {
         return getMostFrequentClassValue(node.getDataSet());
 
     }
+    public String runClassifierCV(TupleInstance tupleInstance) throws FileNotFoundException {
+        System.out.println("\n");
+        System.out.print("tuple:    ");
+        Iterator<Map.Entry<String, String>> iterator = tupleInstance.getValues().entrySet().iterator();
+        while(iterator.hasNext()){
+            String value = iterator.next().getValue();
+            System.out.print(value+"    ");
+        }
+        Node node = rootNode;
+        while (!node.isLeafNode()) {
+            Node node1 = node.getChildren().get(tupleInstance.getValues().get(node.getAttribute().getName()));
+            if(node1==null){
+                break;
+            }else{
+                node = node1;
+            }
+        }
+        System.out.print("\nclass:    ");
 
-    public void runAllTests(){
+        Iterator<Map.Entry<String, AttributeValue>> iterator1 = dataSet.getDefinition().getAttributes().get(className).getValues().entrySet().iterator();
+        boolean totalZero = false;
+        while(iterator1.hasNext()){
+            Map.Entry<String, AttributeValue> next = iterator1.next();
+            double classProbabilityByName = node.getDataSet().getClassProbabilityByName(next.getValue().getValue());
+            if (classProbabilityByName == -1) {
+                totalZero=true;
+                System.out.print(next.getKey() + ": 0.0" + "    ");
+            } else {
+                System.out.print(next.getKey() + ":" + node.getDataSet().getClassProbabilityByName(next.getValue().getValue()) + "    ");
+            }
+        }
+
+        if(totalZero){
+            System.out.print("most frequent class:" + getMostFrequentClassValue(dataSet));
+        }
+        return getMostFrequentClassValue(node.getDataSet());
+
+    }
+
+    public void runAllTests() throws FileNotFoundException {
         for(TupleInstance tupleInstance:testData){
             runClassifier(tupleInstance);
         }
     }
 
-    public int runAllTestsCV(List<String> knownClasses) {
+    public int runAllTestsCV(List<String> knownClasses) throws FileNotFoundException {
         int count = 0;
         for (int i = 0; i < testData.size(); i++) {
-            String s = runClassifier(testData.get(i));
+            String s = runClassifierCV(testData.get(i));
             if (s.equals(knownClasses.get(i))) {
                 count++;
                 System.out.println("Correct Results");
@@ -448,7 +522,11 @@ public class ID3tree {
     }
 
     private String getMostFrequentClassValue(DataSet dataSet) {
-        Attribute classAttribute = dataSet.getDefinition().getAttributes().get(dataSet.getClassName());
+        return getMostFrequentAttributeValue(dataSet, dataSet.getClassName());
+    }
+
+    private String getMostFrequentAttributeValue(DataSet dataSet,String attributeName) {
+        Attribute classAttribute = dataSet.getDefinition().getAttributes().get(attributeName);
         // take the first one as most frequent attribute
         AttributeValue mostFrequestAttribute = classAttribute.getValues().entrySet().iterator().next().getValue();
         Iterator<Map.Entry<String, AttributeValue>> iterator = classAttribute.getValues().entrySet().iterator();

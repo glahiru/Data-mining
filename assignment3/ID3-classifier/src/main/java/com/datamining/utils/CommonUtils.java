@@ -90,7 +90,7 @@ public class CommonUtils {
         URL trainResource = null;
 
         File treeFile = new File(treeResource.getPath());
-        logger.info("--------------------------------------------------------");
+        logger.info("------------------------------------");
         ArrayList<String> tempAttributeList = new ArrayList<String>();
         try {
             FileReader treeFileInputStream = new FileReader(treeFile);
@@ -159,7 +159,7 @@ public class CommonUtils {
                 fileIndex++;
             }
         }
-        logger.info("--------------------------------------------------------");
+        logger.info("------------------------------------");
 
 
         return tempFilePaths;
