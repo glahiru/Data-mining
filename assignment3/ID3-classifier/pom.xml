@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.datamining</groupId>
-        <artifactId>assignment2</artifactId>
+        <artifactId>assignment3</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
@@ -19,10 +19,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
         </dependency>
     </dependencies>
 
