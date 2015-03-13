@@ -405,18 +405,25 @@ public class ID3tree {
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
-
-
+        System.out.println("\n");
         Node node = rootNode;
         while (!node.isLeafNode()) {
-            Node node1 = node.getChildren().get(tupleInstance.getValues().get(node.getAttribute().getName()));
-            if(node1==null){
+            String attributeValue = tupleInstance.getValues().get(node.getAttribute().getName());
+            if("*".equals(attributeValue)) {
+                System.out.println("test attribute is * for attribute:" + node.getAttribute().getName());
+                attributeValue = getMostFrequentAttributeValue(node.getDataSet(), node.getAttribute().getName());
+                System.out.println("So we set the node local highest probability attribute:" + attributeValue);
+            }
+            Node node1 = node.getChildren().get(attributeValue);
+            if (node1 == null) {
                 break;
-            }else{
+            } else {
                 node = node1;
             }
         }
-        System.out.print("\nclass:    ");
+
+
+        System.out.print("class:    ");
 
         Iterator<Map.Entry<String, AttributeValue>> iterator1 = dataSet.getDefinition().getAttributes().get(className).getValues().entrySet().iterator();
         boolean totalZero = false;
