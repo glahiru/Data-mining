@@ -79,9 +79,9 @@ public class ID3tree {
             System.out.println("Error loading data from the given files");
             throw new Exception("Error loading data from the given files");
         }
-        id3tree.printDataSet();
+//        id3tree.printDataSet();
         id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
-        id3tree.printID3Tree();
+//        id3tree.printID3Tree();
         id3tree.runAllTests();
     }
 
