@@ -35,7 +35,10 @@ public class ID3treeTest {
      * Class is C
      */
     @Test
-    public void test() throws FileNotFoundException {
+    public void test() throws Exception {
+        logger.info("------------------------------------------------------------------------------------------------------------");
+        logger.info("------------------------------------Running ID3 Tree simple  Test-------------------------------------------");
+        logger.info("------------------------------------------------------------------------------------------------------------");
         String[] args = new String[2];
         args[0] = "tree.txt";
         args[1] = "test.txt";
@@ -43,9 +46,9 @@ public class ID3treeTest {
 
         ID3tree id3tree = new ID3tree();
         id3tree.loadData(args,true);
-        id3tree.printDataSet();
+//        id3tree.printDataSet();
         id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
-        id3tree.printID3Tree();
+//        id3tree.printID3Tree();
         id3tree.runAllTests();
     }
 
@@ -53,7 +56,7 @@ public class ID3treeTest {
      * Class is B
      */
     @Test
-    public void testTree1() throws FileNotFoundException {
+    public void testTree1() throws Exception {
         String[] args = new String[2];
         args[0] = "tree1.txt";
         args[1] = "test.txt";
@@ -61,9 +64,9 @@ public class ID3treeTest {
 
         ID3tree id3tree = new ID3tree();
         id3tree.loadData(args,true);
-        id3tree.printDataSet();
+//        id3tree.printDataSet();
         id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
-        id3tree.printID3Tree();
+//        id3tree.printID3Tree();
         id3tree.runAllTests();
     }
 }

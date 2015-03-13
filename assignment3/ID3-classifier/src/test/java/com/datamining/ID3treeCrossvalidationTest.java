@@ -42,6 +42,9 @@ public class ID3treeCrossvalidationTest {
         /* this method split the data in to three partitions (randomly)
             build three different trees and run tests data using remaining data
          */
+        logger.info("------------------------------------------------------------------------------------------------------------");
+        logger.info("------------------------------------Running Cross Validation Test-------------------------------------------");
+        logger.info("------------------------------------------------------------------------------------------------------------");
         File headerFile = null;
         File tempTest = null;
         List<File> files = null;
@@ -77,9 +80,7 @@ public class ID3treeCrossvalidationTest {
                     }
                 }
                 CommonUtils.mergeFiles(files2, tempTest);
-                logger.info("------------------------------------");
                 logger.info("Running Cross Validation iteration: " + i);
-                logger.info("------------------------------------");
                 ID3tree id3tree = new ID3tree();
                 ID3tree id3treeTmp = new ID3tree();
 
@@ -121,18 +122,12 @@ public class ID3treeCrossvalidationTest {
 
                 double average = (double) i1 / testClassList.size();
                 accuracyPercentage+=average;
-                logger.info("------------------------------------");
                 logger.info("Finished Cross Validation iteration: " + i);
                 logger.info("Accuracy level: " + (double)i1/testClassList.size());
-                logger.info("------------------------------------");
 
                 tempTest.delete();
             }
-            logger.info("------------------------------------");
-            logger.info("------------------------------------");
             logger.info("Average Accuracy:" + accuracyPercentage / FOLD_SIZE);
-            logger.info("------------------------------------");
-            logger.info("------------------------------------");
 
 
             System.out.println(headerFile.getAbsolutePath());
@@ -145,10 +140,6 @@ public class ID3treeCrossvalidationTest {
                 file.delete();
             }
         }
-//        id3tree.printDataSet();
-//        id3tree.buildClassifier(id3tree.getDataSet(), id3tree.getRootNode());
-//        id3tree.printID3Tree();
-//        id3tree.runAllTests();
     }
 
 

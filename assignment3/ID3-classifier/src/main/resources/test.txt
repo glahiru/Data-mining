@@ -1,2 +1,3 @@
+good	snow 
+good	rain
 bad	rain
-ugly	snow
