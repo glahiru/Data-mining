@@ -1,3 +1,0 @@
-good	snow 
-good	rain
-bad	rain
